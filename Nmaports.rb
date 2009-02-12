@@ -77,12 +77,7 @@ end
 def dir_get_ips(dir, ports)
   final_list = {}
   dir.each do |doc|
-    h = {}
-    xml = read_xml(doc)
-    h = get_ips(xml,ports)
-    final_list.merge!(h) do |k,o,n|
-      final_list[k] =  (o + n).sort.uniq
-    end
+    final_list.merge!(get_ips(read_xml(doc),ports)) { |k,o,n| final_list[k] =  (o + n).sort.uniq }
   end
   final_list  
 end
@@ -136,6 +131,7 @@ def create_csv(list,name=nil)
   end
 end
 
+# Script -------------------------------------------------------------------------------------------
 puts "Let's work ..."
 lista = {}
 
@@ -158,3 +154,4 @@ if @nmap_file
   end
 end
 create_csv(lista,@output)
+puts "Bye"
