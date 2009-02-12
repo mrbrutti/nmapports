@@ -139,7 +139,6 @@ if @nmap_dir
   dir_list = get_files(@nmap_dir,@patern)
   ports = dir_open_ports(dir_list)
   lista = dir_get_ips(dir_list, ports)
-  puts lista
 end
 
 if @nmap_file
