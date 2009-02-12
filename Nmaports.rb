@@ -131,6 +131,13 @@ def create_csv(list,name=nil)
   end
 end
 
+def show_data(list)
+  puts "PORT\t  IP Adressess\n"
+  list.each do |k,v|
+    puts "#{k}\t #{(v.map { |k| "\t" + k + "\n" }.to_s).strip} \n"
+    puts "--------------------------"
+  end
+end
 # Script -------------------------------------------------------------------------------------------
 puts "Let's work ..."
 lista = {}
@@ -152,5 +159,6 @@ if @nmap_file
     end
   end
 end
+show_data(lista)
 create_csv(lista,@output)
 puts "Bye"
