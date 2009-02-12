@@ -60,29 +60,6 @@ opts.each do |opt, arg|
 end
 
 
-puts "Let's work ..."
-lista = {}
-
-if @nmap_dir
-  dir_list = get_files(@nmap_dir,@patern)
-  ports = get_open_ports(dir_list)
-  lista = dir_get_ips(dir_list, ports)
-end
-
-if @nmap_file
-  xml_file = read_xml(@nmap_file)
-  ports = open_ports(xml_file)
-  if lista.empty? 
-    lista = get_ips(xml_file,op)
-  else
-    lista.merge!(get_ips(doc,ports)) { |k,o,n| h[k] =  (o + n).sort.uniq }
-  end
-end
- 
-create_csv(hash,@output)
-  
-
-
 # method to read files from directoy ---------------------------------------------------------------
 
 def get_files(dir,name)
@@ -91,8 +68,8 @@ end
 
 def dir_open_ports(dir)
   arr = []
-  dir.each do |xml| 
-    arr << open_ports(read_xml(xml))
+  dir.each do |doc| 
+    arr += open_ports(read_xml(doc))
   end
   arr.uniq.sort
 end
@@ -100,8 +77,14 @@ end
 def dir_get_ips(dir, ports)
   final_list = {}
   dir.each do |doc|
-    final_list.merge!(get_ips(doc,ports)) { |k,o,n| h[k] =  (o + n).sort.uniq }
-  end  
+    h = {}
+    xml = read_xml(doc)
+    h = get_ips(xml,ports)
+    final_list.merge!(h) do |k,o,n|
+      final_list[k] =  (o + n).sort.uniq
+    end
+  end
+  final_list  
 end
 
 # methods to parse XML Nmap output -----------------------------------------------------------------
@@ -143,23 +126,35 @@ def get_ips(doc,ports)
   open_list
 end
 
-# methods to parse NMAP Nmap output ----------------------------------------------------------------
-
-def read_gnmap()
-  
-end
-# methods to parse GNMAP Nmap output ---------------------------------------------------------------
-
-def read_nmap()
-  #TBI
-end
-
 #methods to output the data ------------------------------------------------------------------------
 
 def create_csv(list,name=nil)
   out = File.new(name || "output.csv", "w")
   out << "PORT,IP Adressess\n"
   list.each do |k,v|
-    out << "#{k},\"#{v.map { |k| k + "\n" }.to_s}\" \n"
+    out << "#{k},\"#{(v.map { |k| k + "\n" }.to_s).strip}\" \n"
   end
 end
+
+puts "Let's work ..."
+lista = {}
+
+if @nmap_dir
+  dir_list = get_files(@nmap_dir,@patern)
+  ports = dir_open_ports(dir_list)
+  lista = dir_get_ips(dir_list, ports)
+  puts lista
+end
+
+if @nmap_file
+  xml_file = read_xml(@nmap_file)
+  ports = open_ports(xml_file)
+  if lista.empty? 
+    lista = get_ips(xml_file,ports)
+  else
+    lista.merge!(get_ips(xml_file,ports)) do |k,o,n| 
+      lista[k] =  (o + n).sort.uniq
+    end
+  end
+end
+create_csv(lista,@output)
