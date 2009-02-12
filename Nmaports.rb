@@ -161,4 +161,5 @@ if @nmap_file
 end
 show_data(lista)
 create_csv(lista,@output)
+puts "Data written to file #{@output || "output.csv"}"
 puts "Bye"
