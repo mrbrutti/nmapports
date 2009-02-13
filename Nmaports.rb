@@ -77,6 +77,7 @@ end
 def dir_get_ips(dir, ports)
   final_list = {}
   dir.each do |doc|
+    puts "Working on #{doc}\n"
     final_list.merge!(get_ips(read_xml(doc),ports)) { |k,o,n| final_list[k] =  (o + n).sort.uniq }
   end
   final_list  
