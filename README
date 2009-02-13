@@ -1,0 +1,20 @@
+ruby Nmaports.rb --help 
+
+HELP for Nmaport
+---------------------
+
+      --help, -h
+      	Well I guess you know what this is for (To obtain this Help).
+
+      --dir, -d [directory_name]
+      	 The root path for the nmap files.
+
+      --pattern, -p
+      	 The pattern to use to detect file (i.e *client*).
+
+      --file, -f [file_name] 
+      	If we only want one file.
+
+      --output, -o
+      	The output file name.
+      Copyright 2009 - FreedomCoder
