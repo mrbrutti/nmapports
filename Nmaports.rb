@@ -92,16 +92,18 @@ end
 def open_ports(doc)
   out = []
   doc.elements.each('host') do |h|
-    h.elements.each('ports/port') do |p| 
-      out << p.attributes['portid'] if p.elements['state'].attributes['state'] == "open"
+    h.elements.each('ports/port') do |p|
+      if p.elements['state'].attributes['state'] == "open" 
+        out << "#{p.attributes['portid']}/#{p.attributes['protocol']}"
+      end
     end
   end
   out.uniq.sort
 end
 
-def open_port?(host,port)
+def open?(host,port)
   host.elements.each('ports/port') do |p|
-    if p.attributes['portid'] == port && p.elements['state'].attributes['state'] == "open"
+    if p.attributes['portid'] == port.split('/')[0] && p.elements['state'].attributes['state'] == "open"
       return true
     end
   end
@@ -113,7 +115,7 @@ def get_ips(doc,ports)
   ports.each do |port|
     a = []
     doc.elements.each('host') do |h|
-      if open_port?(h,port)
+      if open?(h,port)
         a << h.elements['address'].attributes['addr']
       end
     end
@@ -135,7 +137,7 @@ end
 def show_data(list)
   puts "PORT\t  IP Adressess\n"
   list.each do |k,v|
-    puts "#{k}\t #{(v.map { |k| "\t" + k + "\n" }.to_s).strip} \n"
+    puts "#{k}\t#{(v.map { |k| "        " + k + "\n" }.to_s).strip} \n"
     puts "--------------------------"
   end
 end
