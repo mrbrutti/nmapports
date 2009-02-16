@@ -9,13 +9,16 @@
 require 'rubygems'
 require 'getoptlong'
 require 'rexml/document'
-@nmap_dir, @nmap_file, @pattern, @output  = nil
+
+@nmap_dir, @nmap_file, @pattern, @output, @type = nil
+
 opts = GetoptLong.new(
 [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
 ['--dir','-d', GetoptLong::REQUIRED_ARGUMENT ],
 ['--file','-f', GetoptLong::REQUIRED_ARGUMENT ],
 ['--pattern','-p', GetoptLong::REQUIRED_ARGUMENT ],
-['--output','-o', GetoptLong::REQUIRED_ARGUMENT ]
+['--output','-o', GetoptLong::REQUIRED_ARGUMENT ],
+['--type','-t', GetoptLong::REQUIRED_ARGUMENT ]
 )
 
 opts.each do |opt, arg|
@@ -53,6 +56,14 @@ opts.each do |opt, arg|
       @pattern = arg
     when '--output':
       @output = arg
+      @type = @output.split(".")[1].upcase unless @type
+    when '--type':
+      if arg =~ /PDF|pdf|CSV|csv/
+        @type = arg.upcase
+      else
+        puts "unrecognized file type. bye!"
+        exit(0)
+      end
     else
       puts "Unknown command. Please try again"
      exit(0)
@@ -103,7 +114,7 @@ end
 
 def open?(host,port)
   host.elements.each('ports/port') do |p|
-    if p.attributes['portid'] == port.split('/')[0] && p.elements['state'].attributes['state'] == "open"
+    if p.attributes['portid'] == port.split("/")[0] && p.elements['state'].attributes['state'] == "open"
       return true
     end
   end
@@ -115,9 +126,7 @@ def get_ips(doc,ports)
   ports.each do |port|
     a = []
     doc.elements.each('host') do |h|
-      if open?(h,port)
-        a << h.elements['address'].attributes['addr']
-      end
+      a << h.elements['address'].attributes['addr'] if open?(h,port)
     end
     open_list[port] = a
   end
@@ -126,11 +135,46 @@ end
 
 #methods to output the data ------------------------------------------------------------------------
 
+def create_output(list,name,type)
+  case type
+    when "PDF":
+      create_pdf(list,name)
+      puts "Data written to file #{@output || "output.pdf"}"
+    when "CSV":
+      create_csv(list,name)
+      puts "Data written to file #{@output || "output.csv"}"
+    else
+      puts "You did not specified an output type using CSV"
+      create_csv(list,name)
+      puts "Data written to file #{@output || "output.csv"}"
+  end
+end
+       
 def create_csv(list,name=nil)
   out = File.new(name || "output.csv", "w")
   out << "PORT,IP Adressess\n"
   list.each do |k,v|
     out << "#{k},\"#{(v.map { |k| k + "\n" }.to_s).strip}\" \n"
+  end
+end
+
+def create_pdf(list,name=nil)
+  require 'prawn'
+  require 'prawn/layout'
+  Prawn::Document.generate(name || "output.pdf") do 
+    
+    data = []
+    list.each do |k,v|
+      data << [k,(v.map { |k| k + "\n" }.to_s).strip]
+    end
+    
+    table data, 
+      :position => :center, 
+      :headers => ["Port", "IP Adresses"], 
+      :row_colors => ["ffffff","ffff00"],
+      :font_size => 10,
+      :vertical_padding => 2,
+      :horizontal_padding => 5
   end
 end
 
@@ -141,6 +185,7 @@ def show_data(list)
     puts "--------------------------"
   end
 end
+
 # Script -------------------------------------------------------------------------------------------
 puts "Let's work ..."
 lista = {}
@@ -162,7 +207,7 @@ if @nmap_file
     end
   end
 end
+
 show_data(lista)
-create_csv(lista,@output)
-puts "Data written to file #{@output || "output.csv"}"
+create_output(lista,@output,@type)
 puts "Bye"
