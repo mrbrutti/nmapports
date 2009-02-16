@@ -170,8 +170,9 @@ def create_pdf(list,name=nil)
     
     table data, 
       :position => :center, 
-      :headers => ["Port", "IP Adresses"], 
-      :row_colors => ["ffffff","ffff00"],
+      :headers => ["Port", "IP Adresses"],
+      :header_color => "0046f9",
+      :row_colors => :pdf_writer, #["ffffff","ffff00"],
       :font_size => 10,
       :vertical_padding => 2,
       :horizontal_padding => 5
